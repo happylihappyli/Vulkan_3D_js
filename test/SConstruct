@@ -1,0 +1,47 @@
+# -*- coding: utf-8 -*-
+# SCons构建脚本 - 测试程序
+import os
+import time
+from datetime import datetime
+
+# 设置编码为UTF-8
+import sys
+if sys.version_info >= (3, 0):
+    sys.stdout.reconfigure(encoding='utf-8')
+
+# 开始时间
+start_time = time.time()
+print(f"开始编译测试程序: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+# 环境变量
+env = Environment(
+    ENV = os.environ,
+    CPPPATH = ['src', 'include']
+)
+
+# Windows平台特定设置
+if env['PLATFORM'] == 'win32':
+    # MSVC编译器参数
+    env.Append(CCFLAGS=['/std:c++20', '/O2', '/W3', '/DUNICODE', '/D_UNICODE', '/EHsc'])
+    # Windows平台添加Win32 API库
+    env.Append(LIBS=['user32', 'gdi32'])
+else:
+    # GCC/Clang编译器参数
+    env.Append(CCFLAGS=['-std=c++20', '-O2', '-Wall'])
+    env.Append(LINKFLAGS=['-static'])
+
+# 构建目标 - 简单窗口测试
+sources = ['simple_window_test.cpp']
+program = env.Program(target='simple_test.exe', source=sources)
+
+# 构建目标 - 调试窗口测试
+debug_sources = ['debug_window.cpp']
+debug_program = env.Program(target='debug_window.exe', source=debug_sources)
+
+# 结束时间
+end_time = time.time()
+print(f"编译完成: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+print(f"耗时: {end_time - start_time:.2f} 秒")
+
+# 默认目标
+Default([program, debug_program] if 'program' in locals() and 'debug_program' in locals() else [])

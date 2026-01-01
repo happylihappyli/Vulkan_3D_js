@@ -1,0 +1,16 @@
+[requires]
+quickjs/2024-01-13
+glfw/3.4
+imgui/1.90.9
+opengl/system
+
+[generators]
+cmake_find_package
+
+[options]
+quickjs/*:shared=False
+
+[imports]
+bin, *.dll -> ./bin
+lib, *.a, *.lib -> ./lib
+include, *.h -> ./include

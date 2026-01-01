@@ -1,0 +1,7 @@
+脚本执行错误:
+脚本文件: test\test_var3.js
+错误信息: SyntaxError: invalid assignment left-hand side
+脚本内容:
+var x = 10;
+console.log(x);
+

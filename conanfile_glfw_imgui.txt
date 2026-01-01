@@ -1,0 +1,11 @@
+[requires]
+glfw/3.4
+imgui/1.90.9
+glad/0.1.36
+opengl/system
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[options]
