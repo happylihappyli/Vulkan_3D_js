@@ -10,6 +10,7 @@ struct JSRuntime;
 namespace ScriptViewer {
 
 class ModelRenderer3D;
+class ButtonManager;
 
 } // namespace ScriptViewer
 
@@ -26,6 +27,9 @@ public:
     
     void setInitialScript(const std::string& path);
     
+    // 添加日志输出（供JavaScript console.log使用）
+    void addLog(const std::string& message);
+    
 private:
     GLFWwindow* m_window;
     JSRuntime* m_runtime;
@@ -39,10 +43,14 @@ private:
     std::string m_scriptContent;
     std::string m_outputLog;
     
+    // 文本框内容
+    std::string m_textBoxContent;
+    
     bool m_showFileDialog;
     bool m_scriptExecuted;
     
     std::unique_ptr<ModelRenderer3D> m_modelRenderer;
+    std::unique_ptr<ButtonManager> m_buttonManager;
     std::unique_ptr<QuickJSVulkanBridge> m_vulkanBridge;
     
     bool initializeWindow();

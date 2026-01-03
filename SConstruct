@@ -80,6 +80,7 @@ if env['PLATFORM'] == 'win32':
     for source in quickjs_sources:
         # 为C文件创建单独的环境，使用C11标准
         c_env = opengl_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/opengl_'
         c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
         obj = c_env.Object(source=source)
         opengl_sources.append(obj)
@@ -135,6 +136,7 @@ if env['PLATFORM'] == 'win32':
     # 为每个QuickJS源文件设置C编译器
     for source in quickjs_minimal_sources:
         c_env = quickjs_minimal_test_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/quickjs_minimal_test_'
         c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
         obj = c_env.Object(source=source)
         quickjs_minimal_test_sources.append(obj)
@@ -176,6 +178,7 @@ if env['PLATFORM'] == 'win32':
     # 为每个QuickJS源文件设置C编译器
     for source in quickjs_simple_sources:
         c_env = quickjs_simple_test_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/quickjs_simple_test_'
         c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
         obj = c_env.Object(source=source)
         quickjs_simple_test_sources.append(obj)
@@ -217,6 +220,7 @@ if env['PLATFORM'] == 'win32':
     # 为每个QuickJS源文件设置C编译器
     for source in quickjs_context_sources:
         c_env = quickjs_context_test_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/quickjs_context_test_'
         c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
         obj = c_env.Object(source=source)
         quickjs_context_test_sources.append(obj)
@@ -258,6 +262,7 @@ if env['PLATFORM'] == 'win32':
     # 为每个QuickJS源文件设置C编译器
     for source in quickjs_step_sources:
         c_env = quickjs_step_test_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/quickjs_step_test_'
         c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
         obj = c_env.Object(source=source)
         quickjs_step_test_sources.append(obj)
@@ -299,6 +304,7 @@ if env['PLATFORM'] == 'win32':
     # 为每个QuickJS源文件设置C编译器
     for source in quickjs_atom_sources:
         c_env = quickjs_atom_test_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/quickjs_atom_test_'
         c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
         obj = c_env.Object(source=source)
         quickjs_atom_test_sources.append(obj)
@@ -321,6 +327,7 @@ quickjs_atom_test_program = quickjs_atom_test_env.Program(target='bin/quickjs_at
 # 构建目标 - QuickJS模型加载测试程序
 quickjs_model_test_sources = ['test/quickjs_model_test.cpp', 'src/quickjs_vulkan_bridge.cpp', 'src/model_loader_js.cpp']
 quickjs_model_test_env = env.Clone()
+quickjs_model_test_env['OBJPREFIX'] = 'obj/quickjs_model_test_'
 if env['PLATFORM'] == 'win32':
     quickjs_model_test_env.Append(LIBS=['user32'])
     quickjs_model_test_env.Append(CCFLAGS=['/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS'])
@@ -340,6 +347,7 @@ if env['PLATFORM'] == 'win32':
     # 为每个QuickJS源文件设置C编译器
     for source in quickjs_model_sources:
         c_env = quickjs_model_test_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/quickjs_model_test_'
         c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
         obj = c_env.Object(source=source)
         quickjs_model_test_sources.append(obj)
@@ -381,6 +389,7 @@ if env['PLATFORM'] == 'win32':
     # 为每个QuickJS源文件设置C编译器
     for source in quickjs_basic_sources:
         c_env = quickjs_basic_test_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/quickjs_basic_test_'
         c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
         obj = c_env.Object(source=source)
         quickjs_basic_test_sources.append(obj)
@@ -422,6 +431,7 @@ if env['PLATFORM'] == 'win32':
     # 为每个QuickJS源文件设置C编译器
     for source in quickjs_sources:
         c_env = quickjs_test_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/quickjs_test_'
         c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
         obj = c_env.Object(source=source)
         quickjs_test_sources.append(obj)
@@ -441,6 +451,48 @@ else:
         quickjs_test_sources.append(obj)
 quickjs_test_program = quickjs_test_env.Program(target='bin/quickjs_test', source=quickjs_test_sources)
 
+# 构建目标 - QuickJS Math测试程序
+quickjs_math_test_sources = ['test/quickjs_math_test.cpp']
+quickjs_math_test_env = env.Clone()
+if env['PLATFORM'] == 'win32':
+    quickjs_math_test_env.Append(LIBS=['user32'])
+    quickjs_math_test_env.Append(CCFLAGS=['/DENABLE_QUICKJS'])
+    # 添加QuickJS源文件
+    quickjs_math_sources = [
+        'quickjs/quickjs.c',
+        'quickjs/quickjs-libc.c',
+        'quickjs/libregexp.c',
+        'quickjs/libunicode.c',
+        'quickjs/cutils.c',
+        'quickjs/dtoa.c',
+        'quickjs/pthread_compat.c',
+        'quickjs/sys_time_compat.c',
+        'quickjs/dirent_compat.c',
+        'quickjs/compat.c'
+    ]
+    # 为每个QuickJS源文件设置C编译器
+    for source in quickjs_math_sources:
+        c_env = quickjs_math_test_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/quickjs_math_test_'
+        c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
+        obj = c_env.Object(source=source)
+        quickjs_math_test_sources.append(obj)
+else:
+    quickjs_math_test_env.Append(LIBS=['m'])
+    quickjs_math_test_env.Append(CCFLAGS=['-DENABLE_QUICKJS'])
+    # 添加QuickJS源文件
+    quickjs_math_sources = [
+        'quickjs/quickjs.c',
+        'quickjs/quickjs-libc.c',
+        'quickjs/libregexp.c',
+        'quickjs/cutils.c'
+    ]
+    # 为每个QuickJS源文件设置C编译器
+    for source in quickjs_math_sources:
+        obj = quickjs_math_test_env.Object(source=source)
+        quickjs_math_test_sources.append(obj)
+quickjs_math_test_program = quickjs_math_test_env.Program(target='bin/quickjs_math_test', source=quickjs_math_test_sources)
+
 # 构建目标 - Vulkan GPU加速版本
 vulkan_sources = ['src/vulkan_viewer.cpp']
 vulkan_env = env.Clone()
@@ -455,6 +507,7 @@ script_viewer_sources = [
     'src/quickjs_vulkan_bridge.cpp', 
     'src/model_loader_js.cpp',
     'src/model_renderer_3d.cpp',
+    'src/button_manager.cpp',
     'C:/Users/happyli/.conan2/p/imgui12fefc76fc6c6/p/res/bindings/imgui_impl_glfw.cpp',
     'C:/Users/happyli/.conan2/p/imgui12fefc76fc6c6/p/res/bindings/imgui_impl_opengl3.cpp'
 ]
@@ -493,6 +546,7 @@ if env['PLATFORM'] == 'win32':
     # 为每个QuickJS源文件设置C编译器
     for source in script_viewer_quickjs_sources:
         c_env = script_viewer_env.Clone()
+        c_env['OBJPREFIX'] = 'obj/script_viewer_'
         c_env['CCFLAGS'] = ['/std:c11', '/O2', '/W3', '/utf-8', '/D_CRT_SECURE_NO_WARNINGS', '/DCONFIG_VERSION="2024-01-13"', '/DENABLE_QUICKJS']
         obj = c_env.Object(source=source)
         script_viewer_sources.append(obj)
@@ -520,7 +574,9 @@ print(f"编译完成: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 print(f"耗时: {end_time - start_time:.2f} 秒")
 
 # 默认目标 - 构建所有程序
-if 'script_viewer_program' in locals():
+if 'quickjs_math_test_program' in locals():
+    Default(quickjs_math_test_program)
+elif 'script_viewer_program' in locals():
     Default(script_viewer_program)
 elif 'quickjs_basic_test_program' in locals():
     Default(quickjs_basic_test_program)

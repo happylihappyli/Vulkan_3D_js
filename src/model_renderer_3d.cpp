@@ -197,6 +197,22 @@ bool ModelRenderer3D::loadOBJModel(const std::string& filename) {
     return true;
 }
 
+// 清空模型
+void ModelRenderer3D::clearModel() {
+    printf("[调试] 清空模型数据\n");
+    
+    // 清空模型数据
+    m_modelData.clear();
+    
+    // 清空OpenGL资源
+    cleanupGLResources();
+    
+    // 重置加载状态
+    m_modelLoaded = false;
+    
+    printf("[调试] 模型已清空\n");
+}
+
 // 解析OBJ文件
 bool ModelRenderer3D::parseOBJFile(const std::string& filename) {
     std::ifstream file(filename);
@@ -529,7 +545,75 @@ void ModelRenderer3D::render(int width, int height) {
 
     glPopMatrix();
     
+    // 添加一个明显的调试立方体，确保渲染管线工作正常
+    glPushMatrix();
+    glTranslatef(0.0f, 0.5f, 0.0f); // 放在原点上方一点
+    glScalef(0.5f, 0.5f, 0.5f);
+    
+    glBegin(GL_TRIANGLES);
+    // 前表面 - 红色
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex3f(-1.0f, -1.0f,  1.0f);
+    glVertex3f( 1.0f, -1.0f,  1.0f);
+    glVertex3f( 1.0f,  1.0f,  1.0f);
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex3f(-1.0f, -1.0f,  1.0f);
+    glVertex3f( 1.0f,  1.0f,  1.0f);
+    glVertex3f(-1.0f,  1.0f,  1.0f);
+    // 后表面 - 绿色
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f(-1.0f,  1.0f, -1.0f);
+    glVertex3f( 1.0f,  1.0f, -1.0f);
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f( 1.0f,  1.0f, -1.0f);
+    glVertex3f( 1.0f, -1.0f, -1.0f);
+    // 上表面 - 蓝色
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(-1.0f,  1.0f, -1.0f);
+    glVertex3f(-1.0f,  1.0f,  1.0f);
+    glVertex3f( 1.0f,  1.0f,  1.0f);
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(-1.0f,  1.0f, -1.0f);
+    glVertex3f( 1.0f,  1.0f,  1.0f);
+    glVertex3f( 1.0f,  1.0f, -1.0f);
+    // 下表面 - 黄色
+    glColor3f(1.0f, 1.0f, 0.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f( 1.0f, -1.0f, -1.0f);
+    glVertex3f( 1.0f, -1.0f,  1.0f);
+    glColor3f(1.0f, 1.0f, 0.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f( 1.0f, -1.0f,  1.0f);
+    glVertex3f(-1.0f, -1.0f,  1.0f);
+    // 右表面 - 品红色
+    glColor3f(1.0f, 0.0f, 1.0f);
+    glVertex3f( 1.0f, -1.0f, -1.0f);
+    glVertex3f( 1.0f,  1.0f, -1.0f);
+    glVertex3f( 1.0f,  1.0f,  1.0f);
+    glColor3f(1.0f, 0.0f, 1.0f);
+    glVertex3f( 1.0f, -1.0f, -1.0f);
+    glVertex3f( 1.0f,  1.0f,  1.0f);
+    glVertex3f( 1.0f, -1.0f,  1.0f);
+    // 左表面 - 青色
+    glColor3f(0.0f, 1.0f, 1.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f(-1.0f, -1.0f,  1.0f);
+    glVertex3f(-1.0f,  1.0f,  1.0f);
+    glColor3f(0.0f, 1.0f, 1.0f);
+    glVertex3f(-1.0f, -1.0f, -1.0f);
+    glVertex3f(-1.0f,  1.0f,  1.0f);
+    glVertex3f(-1.0f,  1.0f, -1.0f);
+    glEnd();
+    
+    glPopMatrix();
+    
     if (m_modelLoaded) {
+        printf("[调试] 开始绘制模型: 顶点数=%zu, 面数=%zu\n", 
+               m_modelData.vertices.size() / 3, 
+               m_modelData.indices.size() / 3);
+        
         // 设置渲染模式
         if (m_wireframeMode) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -551,10 +635,10 @@ void ModelRenderer3D::render(int width, int height) {
         // 应用缩放
         glScalef(m_scale, m_scale, m_scale);
         
-        // printf("[调试] 模型变换: 位置=(%.2f,%.2f,%.2f), 旋转=(%.1f,%.1f,%.1f), 缩放=%.2f\n",
-        //        m_positionX, m_positionY, m_positionZ,
-        //        m_rotationX, m_rotationY, m_rotationZ,
-        //        m_scale);
+        printf("[调试] 模型变换: 位置=(%.2f,%.2f,%.2f), 旋转=(%.1f,%.1f,%.1f), 缩放=%.2f\n",
+               m_positionX, m_positionY, m_positionZ,
+               m_rotationX, m_rotationY, m_rotationZ,
+               m_scale);
         
         // 绑定VAO并绘制
         glBindVertexArray(m_vao);
@@ -567,6 +651,7 @@ void ModelRenderer3D::render(int width, int height) {
                                static_cast<GLsizei>(m_modelData.indices.size()), 
                                GL_UNSIGNED_INT, 
                                0);
+                printf("[调试] 绘制完成: 使用glDrawElements\n");
             } else {
                 // 遍历所有子网格进行绘制
                 int subMeshIdx = 0;
@@ -575,9 +660,14 @@ void ModelRenderer3D::render(int width, int height) {
                     if (subMesh.materialIndex >= 0 && subMesh.materialIndex < m_modelData.materials.size()) {
                         const Material& mat = m_modelData.materials[subMesh.materialIndex];
                         glColor3fv(mat.diffuse);
+                        printf("[调试] 子网格%d: 材质=%s, 颜色=(%.2f,%.2f,%.2f), 起始=%zu, 数量=%zu\n",
+                               subMeshIdx, mat.name.c_str(), 
+                               mat.diffuse[0], mat.diffuse[1], mat.diffuse[2],
+                               subMesh.indexStart, subMesh.indexCount);
                     } else {
                         // 默认材质
                         glColor3f(0.8f, 0.8f, 0.8f);
+                        printf("[调试] 子网格%d: 使用默认材质\n", subMeshIdx);
                     }
                     
                     // 绘制子网格
@@ -586,14 +676,20 @@ void ModelRenderer3D::render(int width, int height) {
                     glDrawArrays(GL_TRIANGLES, 
                                  (GLint)subMesh.indexStart, 
                                  (GLsizei)subMesh.indexCount);
-                                 
+                    
+                    printf("[调试] 子网格%d绘制完成\n", subMeshIdx);
                     subMeshIdx++;
                 }
             }
+        } else {
+            printf("[错误] VAO为0，无法绘制模型\n");
         }
         
         glBindVertexArray(0);
         glPopMatrix();
+        printf("[调试] 模型绘制完成\n");
+    } else {
+        printf("[调试] 模型未加载，跳过绘制\n");
     }
     
     // 恢复OpenGL状态

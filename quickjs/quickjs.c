@@ -7786,14 +7786,17 @@ static int JS_AutoInitProperty(JSContext *ctx, JSObject *p, JSAtom prop,
     JSAutoInitFunc *func;
     JSAutoInitIDEnum id;
     
+    printf("[DEBUG] JS_AutoInitProperty: 开始, prop=%d, id=%d\n", prop, pr->u.init.realm_and_id & 3);
     if (js_shape_prepare_update(ctx, p, &prs))
         return -1;
 
     realm = js_autoinit_get_realm(pr);
     id = js_autoinit_get_id(pr);
     func = js_autoinit_func_table[id];
+    printf("[DEBUG] JS_AutoInitProperty: func=%p, realm=%p, opaque=%p\n", func, realm, pr->u.init.opaque);
     /* 'func' shall not modify the object properties 'pr' */
     val = func(realm, p, prop, pr->u.init.opaque);
+    printf("[DEBUG] JS_AutoInitProperty: func 返回, val tag=%d\n", JS_VALUE_GET_TAG(val));
     js_autoinit_free(ctx->rt, pr);
     prs->flags &= ~JS_PROP_TMASK;
     pr->u.value = JS_UNDEFINED;
@@ -7881,9 +7884,12 @@ JSValue JS_GetPropertyInternal(JSContext *ctx, JSValueConst obj,
     for(;;) {
         prs = find_own_property(&pr, p, prop);
         if (prs) {
+            printf("[DEBUG] JS_GetPropertyInternal: 找到属性 prop=%d, flags=%d\n", prop, prs->flags);
             /* found */
             if (unlikely(prs->flags & JS_PROP_TMASK)) {
+                printf("[DEBUG] JS_GetPropertyInternal: 属性有特殊标志 TMASK=%d\n", prs->flags & JS_PROP_TMASK);
                 if ((prs->flags & JS_PROP_TMASK) == JS_PROP_GETSET) {
+                    printf("[DEBUG] JS_GetPropertyInternal: 处理 GETSET\n");
                     if (unlikely(!pr->u.getset.getter)) {
                         return JS_UNDEFINED;
                     } else {
@@ -7893,17 +7899,20 @@ JSValue JS_GetPropertyInternal(JSContext *ctx, JSValueConst obj,
                         return JS_CallFree(ctx, func, this_obj, 0, NULL);
                     }
                 } else if ((prs->flags & JS_PROP_TMASK) == JS_PROP_VARREF) {
+                    printf("[DEBUG] JS_GetPropertyInternal: 处理 VARREF\n");
                     JSValue val = *pr->u.var_ref->pvalue;
                     if (unlikely(JS_IsUninitialized(val)))
                         return JS_ThrowReferenceErrorUninitialized(ctx, prs->atom);
                     return JS_DupValue(ctx, val);
                 } else if ((prs->flags & JS_PROP_TMASK) == JS_PROP_AUTOINIT) {
+                    printf("[DEBUG] JS_GetPropertyInternal: 处理 AUTOINIT\n");
                     /* Instantiate property and retry */
                     if (JS_AutoInitProperty(ctx, p, prop, pr, prs))
                         return JS_EXCEPTION;
                     continue;
                 }
             } else {
+                printf("[DEBUG] JS_GetPropertyInternal: 返回普通属性值\n");
                 return JS_DupValue(ctx, pr->u.value);
             }
         }
@@ -10261,7 +10270,10 @@ static int JS_DefineAutoInitProperty(JSContext *ctx, JSValueConst this_obj,
     JSObject *p;
     JSProperty *pr;
     
+    printf("[DEBUG] JS_DefineAutoInitProperty: 开始, prop=%d, id=%d, flags=%d\n", prop, id, flags);
+    
     if (JS_VALUE_GET_TAG(this_obj) != JS_TAG_OBJECT) {
+        printf("[DEBUG] JS_DefineAutoInitProperty: this_obj 不是对象\n");
         return FALSE;
     }
 
@@ -10269,12 +10281,14 @@ static int JS_DefineAutoInitProperty(JSContext *ctx, JSValueConst this_obj,
 
     if (find_own_property(&pr, p, prop)) {
         /* property already exists */
+        printf("[DEBUG] JS_DefineAutoInitProperty: 属性已存在\n");
         return TRUE;
     }
 
     /* Specialized CreateProperty */
     pr = add_property(ctx, p, prop, (flags & JS_PROP_C_W_E) | JS_PROP_AUTOINIT);
     if (unlikely(!pr)) {
+        printf("[DEBUG] JS_DefineAutoInitProperty: add_property 失败\n");
         return -1;
     }
     
@@ -10283,6 +10297,7 @@ static int JS_DefineAutoInitProperty(JSContext *ctx, JSValueConst this_obj,
     assert(id <= 3);
     pr->u.init.realm_and_id |= id;
     pr->u.init.opaque = opaque;
+    printf("[DEBUG] JS_DefineAutoInitProperty: 完成, opaque=%p\n", opaque);
     return TRUE;
 }
 
@@ -39064,13 +39079,22 @@ static JSValue JS_NewObjectProtoList(JSContext *ctx, JSValueConst proto,
                                      const JSCFunctionListEntry *fields, int n_fields)
 {
     JSValue obj;
+    printf("[DEBUG] JS_NewObjectProtoList: 开始, n_fields=%d\n", n_fields);
+    if (n_fields > 0) {
+        printf("[DEBUG] JS_NewObjectProtoList: 第一个字段 name='%s', def_type=%d\n", fields[0].name, fields[0].def_type);
+    }
     obj = JS_NewObjectProtoClassAlloc(ctx, proto, JS_CLASS_OBJECT, n_fields);
-    if (JS_IsException(obj))
+    if (JS_IsException(obj)) {
+        printf("[DEBUG] JS_NewObjectProtoList: JS_NewObjectProtoClassAlloc 失败\n");
         return obj;
+    }
+    printf("[DEBUG] JS_NewObjectProtoList: 准备调用 JS_SetPropertyFunctionList\n");
     if (JS_SetPropertyFunctionList(ctx, obj, fields, n_fields)) {
+        printf("[DEBUG] JS_NewObjectProtoList: JS_SetPropertyFunctionList 失败\n");
         JS_FreeValue(ctx, obj);
         return JS_EXCEPTION;
     }
+    printf("[DEBUG] JS_NewObjectProtoList: 完成\n");
     return obj;
 }
 

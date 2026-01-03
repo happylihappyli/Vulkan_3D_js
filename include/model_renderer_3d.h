@@ -59,6 +59,9 @@ public:
     // 加载OBJ模型
     bool loadOBJModel(const std::string& filename);
     
+    // 清空模型
+    void clearModel();
+    
     // 渲染模型到 FBO
     void render(int width, int height);
     

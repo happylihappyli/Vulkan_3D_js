@@ -1,6 +1,7 @@
 #include "script_viewer_app.h"
 #include "quickjs_vulkan_bridge.h"
 #include "model_renderer_3d.h"
+#include "button_manager.h"
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -27,6 +28,7 @@ ScriptViewerApp::ScriptViewerApp()
     , m_showFileDialog(false)
     , m_scriptExecuted(false)
     , m_modelRenderer(std::make_unique<ModelRenderer3D>())
+    , m_buttonManager(std::make_unique<ButtonManager>())
 {
 }
 
@@ -162,15 +164,15 @@ bool ScriptViewerApp::initializeQuickJS() {
     }
     printf("[调试] QuickJS运行时创建成功\n");
     
-    printf("[调试] 创建QuickJS原始上下文...\n");
-    m_context = JS_NewContextRaw(m_runtime);
+    printf("[调试] 创建QuickJS上下文...\n");
+    m_context = JS_NewContext(m_runtime);
     if (!m_context) {
         printf("[调试] QuickJS上下文创建失败！\n");
         JS_FreeRuntime(m_runtime);
         m_runtime = nullptr;
         return false;
     }
-    printf("[调试] QuickJS原始上下文创建成功\n");
+    printf("[调试] QuickJS上下文创建成功\n");
     
     // 初始化QuickJS标准库
     js_std_init_handlers(m_runtime);
@@ -274,6 +276,12 @@ bool ScriptViewerApp::initializeQuickJS() {
     printf("[调试] 初始化Vulkan桥接...\n");
     m_vulkanBridge->initialize(m_context, m_runtime);
     m_vulkanBridge->setModelRenderer(m_modelRenderer.get());
+    m_vulkanBridge->setButtonManager(m_buttonManager.get());
+    m_vulkanBridge->setApp(this); // 设置应用程序指针，用于输出到UI
+    
+    // 为ButtonManager设置JSContext（用于调用JavaScript函数）
+    m_buttonManager->setJSContext(m_context);
+    
     printf("[调试] Vulkan桥接初始化成功\n");
     
     return true;
@@ -303,6 +311,7 @@ void ScriptViewerApp::cleanup() {
     }
     
     if (m_runtime) {
+        js_std_free_handlers(m_runtime);
         JS_FreeRuntime(m_runtime);
         m_runtime = nullptr;
     }
@@ -320,14 +329,20 @@ void ScriptViewerApp::cleanup() {
 void ScriptViewerApp::mainLoop() {
     printf("[调试] mainLoop()函数开始执行\n");
     
+    int frameCount = 0;
     while (!glfwWindowShouldClose(m_window)) {
+        frameCount++;
+        if (frameCount % 60 == 0) {
+            printf("[调试] mainLoop()运行中，帧数: %d\n", frameCount);
+        }
+        
         glfwPollEvents();
         
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         
-        printf("[调试] 调用renderUI()\n");
+        // printf("[调试] 调用renderUI()\n");
         renderUI();
         
         ImGui::Render();
@@ -344,8 +359,11 @@ void ScriptViewerApp::mainLoop() {
             printf("[调试] 执行初始脚本\n");
             executeScript();
             m_scriptExecuted = true;
+            printf("[调试] 脚本执行完成，继续运行主循环\n");
         }
     }
+    
+    printf("[调试] mainLoop()函数结束，总帧数: %d\n", frameCount);
 }
 
 void ScriptViewerApp::renderUI() {
@@ -403,7 +421,31 @@ void ScriptViewerApp::renderUI() {
         ImGui::EndChild();
     }
     
+    ImGui::Separator();
+    
+    // 添加文本框
+    ImGui::Text("文本输入:");
+    char textBoxBuffer[1024] = {0};
+    strncpy_s(textBoxBuffer, sizeof(textBoxBuffer), m_textBoxContent.c_str(), _TRUNCATE);
+    if (ImGui::InputTextMultiline("##TextBox", textBoxBuffer, sizeof(textBoxBuffer), ImVec2(0, 100))) {
+        m_textBoxContent = textBoxBuffer;
+    }
+    
     ImGui::End();
+    
+    // 渲染JavaScript创建的按钮
+    if (m_buttonManager) {
+        // 创建一个专门的窗口来显示按钮
+        ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
+        
+        ImGui::Begin("JavaScript按钮", nullptr, ImGuiWindowFlags_NoCollapse);
+        
+        // 渲染所有按钮
+        m_buttonManager->render();
+        
+        ImGui::End();
+    }
     
     // 渲染3D视图窗口
     render3DView();
@@ -561,7 +603,7 @@ void ScriptViewerApp::render3DView() {
     ImGui::TextColored(ImVec4(1, 1, 0, 1), "控制面板");
     ImGui::Separator();
     
-    // 模型加载按钮
+    // 模型加载和清空按钮
     if (ImGui::Button("加载OBJ模型", ImVec2(-1, 0))) {
         OPENFILENAMEA ofn;
         char szFile[260] = {0};
@@ -584,6 +626,14 @@ void ScriptViewerApp::render3DView() {
             } else {
                 m_outputLog += "3D模型加载失败: " + std::string(szFile) + "\n";
             }
+        }
+    }
+    
+    // 清空模型按钮
+    if (ImGui::Button("清空模型", ImVec2(-1, 0))) {
+        if (m_modelRenderer) {
+            m_modelRenderer->clearModel();
+            m_outputLog += "模型已清空\n";
         }
     }
     
@@ -659,6 +709,10 @@ void ScriptViewerApp::render3DView() {
 
 void ScriptViewerApp::glfwErrorCallback(int error, const char* description) {
     fprintf(stderr, "GLFW错误 %d: %s\n", error, description);
+}
+
+void ScriptViewerApp::addLog(const std::string& message) {
+    m_outputLog += message + "\n";
 }
 
 } // namespace ScriptViewer
